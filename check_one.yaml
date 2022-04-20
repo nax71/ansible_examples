@@ -1,0 +1,26 @@
+---
+- hosts: "{{ perimeter }}"
+  gather_facts: no
+  tasks:
+    - name: "Get md5sum of local file files/{{ file_to_check }}"
+      local_action: stat path="files/{{ file_to_check }}"
+      register: local_file
+      run_once: True
+
+    - name: Local check sum 
+      set_fact:
+        local_checksum: "{{ local_file.stat.checksum }}"
+      run_once: True
+
+    - name: "Get md5sum of remote file {{ file_to_check }}"
+      stat: path="{{ file_to_check }}"
+      register: remote_file
+
+    - name: Remote check sum 
+      set_fact:
+        remote_checksum: "{{ remote_file.stat.checksum }}"
+    
+    - name: Compare local with remote file
+      debug:
+        msg: "Compare files local {{ local_checksum }} vs remote {{ remote_checksum }}"
+      failed_when: local_checksum != remote_checksum
